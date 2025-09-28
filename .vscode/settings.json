@@ -7,4 +7,11 @@
         }
       ]
     },
+    "files.associations": {
+      "stdio.h": "c",
+      "buffer.h": "c",
+      "types.h": "c",
+      "stdbool.h": "c",
+      "stdlib.h": "c"
+    },
   }
