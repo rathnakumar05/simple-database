@@ -1,0 +1,10 @@
+{
+    "emeraldwalk.runonsave": {
+      "commands": [
+        {
+          "match": ".*\\.c$",
+          "cmd": "export VERSION_CONTROL=none && indent -gnu ${file}"
+        }
+      ]
+    },
+  }
