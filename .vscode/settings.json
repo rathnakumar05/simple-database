@@ -6,12 +6,5 @@
           "cmd": "export VERSION_CONTROL=none && indent -gnu ${file}"
         }
       ]
-    },
-    "files.associations": {
-      "stdio.h": "c",
-      "buffer.h": "c",
-      "types.h": "c",
-      "stdbool.h": "c",
-      "stdlib.h": "c"
-    },
+    }
   }
