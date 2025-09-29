@@ -6,5 +6,9 @@
           "cmd": "export VERSION_CONTROL=none && indent -gnu ${file}"
         }
       ]
+    },
+    "files.associations": {
+      "table.h": "c",
+      "statement.h": "c"
     }
   }

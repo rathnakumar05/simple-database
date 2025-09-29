@@ -9,9 +9,17 @@
 #include "table.h"
 
 int
-main ()
+main (int argc, char *argv[])
 {
-  table_t *table = new_table ();
+
+  if (argc < 2)
+    {
+      printf ("Must supply a database filename.\n");
+      exit (EXIT_FAILURE);
+    }
+
+  char *filename = argv[1];
+  table_t *table = db_open (filename);
   if (table == NULL)
     {
       exit (EXIT_FAILURE);
@@ -23,7 +31,7 @@ main ()
       if (read_input (input_buffer) == -1)
 	{
 	  close_input_buffer (input_buffer);
-	  free_table (table);
+	  db_close (table);
 	  perror ("Failed to read line: ");
 	  exit (EXIT_FAILURE);
 	}
@@ -46,6 +54,18 @@ main ()
 	case (PREPARE_SUCCESS):
 	  break;
 
+	case (PREPARE_NEGATIVE_ID):
+	  printf ("ID must be positive\n");
+	  continue;
+
+	case (PREPARE_STRING_TOO_LARGE):
+	  printf ("String too large\n");
+	  continue;
+
+	case (PREPARE_SYNTAX_ERROR):
+	  printf ("Syntax error\n");
+	  continue;
+
 	case (PREPARE_UNRECOGNIZED_STATEMENT):
 	  printf ("Unrecognized statement: %s\n", input_buffer->buffer);
 	  continue;
@@ -55,7 +75,7 @@ main ()
       if (execute_status == EXECUTE_FAILURE)
 	{
 	  close_input_buffer (input_buffer);
-	  free_table (table);
+	  db_close (table);
 	  perror ("Failed to execute: ");
 	  exit (EXIT_FAILURE);
 	}

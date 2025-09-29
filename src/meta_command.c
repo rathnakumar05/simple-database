@@ -6,7 +6,7 @@ do_meta_command (input_buffer_t * input_buffer, table_t * table)
   if (strcmp (input_buffer->buffer, ".exit") == 0)
     {
       printf ("exiting..\n");
-      free_table (table);
+      db_close (table);
       close_input_buffer (input_buffer);
       exit (EXIT_SUCCESS);
     }
