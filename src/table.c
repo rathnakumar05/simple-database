@@ -22,11 +22,8 @@ void
 serialize_row (row_t * source, void *destination)
 {
   memcpy (destination + ID_OFFSET, &(source->id), ID_SIZE);
-  memset (destination + USERNAME_OFFSET, 0, USERNAME_SIZE);
-  strncpy (destination + USERNAME_OFFSET, source->username,
-	   USERNAME_SIZE - 1);
-  memset (destination + EMAIL_OFFSET, 0, EMAIL_SIZE);
-  strncpy (destination + EMAIL_OFFSET, source->email, EMAIL_SIZE - 1);
+  strncpy (destination + USERNAME_OFFSET, source->username, USERNAME_SIZE);
+  strncpy (destination + EMAIL_OFFSET, source->email, EMAIL_SIZE);
 }
 
 void
@@ -34,9 +31,7 @@ deserialize_row (void *source, row_t * destination)
 {
   memcpy (&(destination->id), source + ID_OFFSET, ID_SIZE);
   memcpy (destination->username, source + USERNAME_OFFSET, USERNAME_SIZE);
-  destination->username[USERNAME_SIZE - 1] = '\0';
   memcpy (destination->email, source + EMAIL_OFFSET, EMAIL_SIZE);
-  destination->email[EMAIL_SIZE - 1] = '\0';
 }
 
 void *
@@ -159,7 +154,7 @@ int
 db_close (table_t * table)
 {
   pager_t *pager = table->pager;
-  uint32_t num_full_pages = pager->file_size / ROWS_PER_PAGE;
+  uint32_t num_full_pages = table->num_rows / ROWS_PER_PAGE;
 
   for (uint32_t i = 0; i < num_full_pages; i++)
     {
