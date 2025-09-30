@@ -63,30 +63,38 @@ execute_insert (statement_t * statement, table_t * table)
     }
 
   row_t *source = &(statement->row);
-  void *destination = row_slot (table, table->num_rows);
+  cursor_t *cursor = table_end (table);
+  void *destination = cursor_value (cursor);
   if (destination == NULL)
     {
       return EXECUTE_FAILURE;
     }
   serialize_row (source, destination);
   table->num_rows++;
+  free (cursor);
+
   return EXECUTE_SUCCESS;
 }
 
 execute_type_t
 execute_select (table_t * table)
 {
+  cursor_t *cursor = table_start (table);
   row_t row;
-  for (uint32_t i = 0; i < table->num_rows; i++)
+
+  while (!cursor->end_of_table)
     {
-      void *source = row_slot (table, i);
+      void *source = cursor_value (cursor);
       if (source == NULL)
 	{
 	  return EXECUTE_FAILURE;
 	}
       deserialize_row (source, &row);
       print_row (&row);
+      cursor_advance (cursor);
     }
+  free (cursor);
+
   return EXECUTE_SUCCESS;
 }
 

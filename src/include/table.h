@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -47,10 +48,21 @@ typedef struct
     pager_t * pager;
 } table_t;
 
+typedef struct {
+    table_t * table;
+    uint32_t row_num;
+    bool end_of_table;
+} cursor_t;
+
 void print_row(row_t *row);
 void serialize_row(row_t *source, void *destination);
 void deserialize_row(void *source, row_t *destination);
-void *row_slot(table_t *table, uint32_t row_num);
+
+cursor_t * table_start(table_t * table);
+cursor_t * table_end (table_t * table);
+void * cursor_value (cursor_t * cursor);
+void cursor_advance (cursor_t * cursor);
+
 void* get_page(pager_t *pager, uint32_t page_num);
 pager_t * pager_open (const char *file_name);
 table_t * db_open (const char *file_name);
