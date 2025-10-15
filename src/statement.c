@@ -57,7 +57,8 @@ prepare_statement (input_buffer_t * input_buffer, statement_t * statement)
 execute_type_t
 execute_insert (statement_t * statement, table_t * table)
 {
-  if (table->num_rows == TABLE_MAX_ROWS)
+  void *node = get_page (table->pager, table->root_page_num);
+  if ((*leaf_node_num_cells (node) >= LEAF_NODE_MAX_CELLS))
     {
       return EXECUTE_TABLE_FULL;
     }
@@ -69,8 +70,7 @@ execute_insert (statement_t * statement, table_t * table)
     {
       return EXECUTE_FAILURE;
     }
-  serialize_row (source, destination);
-  table->num_rows++;
+  leaf_node_insert (cursor, source->id, source);
   free (cursor);
 
   return EXECUTE_SUCCESS;
