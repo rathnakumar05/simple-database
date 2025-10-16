@@ -80,6 +80,19 @@ main (int argc, char *argv[])
 	  exit (EXIT_FAILURE);
 	}
 
+      switch (execute_status)
+	{
+	case (EXECUTE_SUCCESS):
+	  printf ("Executed.\n");
+	  break;
+	case (EXECUTE_DUPLICATE_KEY):
+	  printf ("Error: Duplicate key.\n");
+	  break;
+	case (EXECUTE_TABLE_FULL):
+	  printf ("Error: Table full.\n");
+	  break;
+	}
+
     }
 
   return 0;

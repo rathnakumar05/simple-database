@@ -32,6 +32,7 @@ typedef enum{
     EXECUTE_FAILURE,
     EXECUTE_SUCCESS,
     EXECUTE_TABLE_FULL,
+    EXECUTE_DUPLICATE_KEY,
 } execute_type_t;
 
 prepare_type_t prepare_statement(input_buffer_t *input_buffer, statement_t *statement);

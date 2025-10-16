@@ -23,6 +23,51 @@ print_leaf_node (void *node)
     }
 }
 
+void
+indent (uint32_t level)
+{
+  for (uint32_t i = 0; i < level; i++)
+    {
+      printf ("  ");
+    }
+}
+
+void
+print_tree (pager_t * pager, uint32_t page_num, uint32_t indentation_level)
+{
+  void *node = get_page (pager, page_num);
+  uint32_t num_keys, child;
+
+  switch (get_node_type (node))
+    {
+    case (NODE_LEAF):
+      num_keys = *leaf_node_num_cells (node);
+      indent (indentation_level);
+      printf ("- leaf (size %d)\n", num_keys);
+      for (uint32_t i = 0; i < num_keys; i++)
+	{
+	  indent (indentation_level + 1);
+	  printf ("- %d\n", *leaf_node_key (node, i));
+	}
+      break;
+    case (NODE_INTERNAL):
+      num_keys = *internal_node_num_keys (node);
+      indent (indentation_level);
+      printf ("- internal (size %d)\n", num_keys);
+      for (uint32_t i = 0; i < num_keys; i++)
+	{
+	  child = *internal_node_child (node, i);
+	  print_tree (pager, child, indentation_level + 1);
+
+	  indent (indentation_level + 1);
+	  printf ("- key %d\n", *internal_node_key (node, i));
+	}
+      child = *internal_node_right_child (node);
+      print_tree (pager, child, indentation_level + 1);
+      break;
+    }
+}
+
 meta_command_type_t
 do_meta_command (input_buffer_t * input_buffer, table_t * table)
 {
@@ -42,7 +87,7 @@ do_meta_command (input_buffer_t * input_buffer, table_t * table)
   else if (strcmp (input_buffer->buffer, ".btree") == 0)
     {
       printf ("Tree:\n");
-      print_leaf_node (get_page (table->pager, 0));
+      print_tree (table->pager, 0, 0);
       return META_COMMAND_SUCCESS;
     }
   else

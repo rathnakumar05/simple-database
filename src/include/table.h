@@ -59,6 +59,19 @@ extern const uint32_t LEAF_NODE_CELL_SIZE;
 extern const uint32_t LEAF_NODE_SPACE_FOR_CELLS;
 extern const uint32_t LEAF_NODE_MAX_CELLS;
 
+extern const uint32_t LEAF_NODE_LEFT_SPLIT_COUNT;
+extern const uint32_t LEAF_NODE_RIGHT_SPLIT_COUNT;
+
+extern const uint32_t INTERNAL_NODE_NUM_KEYS_SIZE;
+extern const uint32_t INTERNAL_NODE_NUM_KEYS_OFFSET;
+extern const uint32_t INTERNAL_NODE_RIGHT_CHILD_SIZE;
+extern const uint32_t INTERNAL_NODE_RIGHT_CHILD_OFFSET;
+extern const uint32_t INTERNAL_NODE_HEADER_SIZE;
+
+extern const uint32_t INTERNAL_NODE_KEY_SIZE;
+extern const uint32_t INTERNAL_NODE_CHILD_SIZE;
+extern const uint32_t INTERNAL_NODE_CELL_SIZE;
+
 typedef struct {
     int file_d;
     uint32_t file_size;
@@ -79,6 +92,8 @@ typedef struct {
     bool end_of_table;
 } cursor_t;
 
+node_type_t get_node_type (void *node);
+void set_node_type (void *node, node_type_t type);
 uint32_t * leaf_node_num_cells (void *node);
 void * leaf_node_cell (void *node, uint32_t num);
 uint32_t * leaf_node_key (void *node, uint32_t num);
@@ -90,7 +105,7 @@ void serialize_row(row_t *source, void *destination);
 void deserialize_row(void *source, row_t *destination);
 
 cursor_t * table_start(table_t * table);
-cursor_t * table_end (table_t * table);
+cursor_t* table_find(table_t * table, uint32_t key);
 void * cursor_value (cursor_t * cursor);
 void cursor_advance (cursor_t * cursor);
 
@@ -100,6 +115,20 @@ table_t * db_open (const char *file_name);
 int pager_flush (pager_t * pager, uint32_t page_num);
 int db_close (table_t * table);
 
+uint32_t * internal_node_num_keys (void *node);
+uint32_t * internal_node_right_child (void *node);
+uint32_t * internal_node_cell (void *node, uint32_t cell_num);
+uint32_t * internal_node_child (void *node, uint32_t child_num);
+uint32_t get_node_max_key (void *node);
+bool is_node_root (void *node);
+void set_node_root (void *node, bool is_root);
+uint32_t * internal_node_key (void *node, uint32_t key_num);
+
 int leaf_node_insert (cursor_t * cursor, uint32_t key, row_t * value);
+cursor_t * leaf_node_find (table_t * table, uint32_t page_num, uint32_t key);
+int leaf_node_split_and_insert (cursor_t * cursor, uint32_t key, row_t * value);
+uint32_t get_unused_page_num (pager_t * pager);
+
+int create_new_root (table_t * table, uint32_t right_child_page_num);
 
 #endif

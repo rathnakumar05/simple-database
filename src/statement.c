@@ -58,18 +58,21 @@ execute_type_t
 execute_insert (statement_t * statement, table_t * table)
 {
   void *node = get_page (table->pager, table->root_page_num);
-  if ((*leaf_node_num_cells (node) >= LEAF_NODE_MAX_CELLS))
-    {
-      return EXECUTE_TABLE_FULL;
-    }
+  uint32_t num_cells = *leaf_node_num_cells (node);
 
   row_t *source = &(statement->row);
-  cursor_t *cursor = table_end (table);
-  void *destination = cursor_value (cursor);
-  if (destination == NULL)
+  uint32_t key = source->id;
+  cursor_t *cursor = table_find (table, key);
+  if (cursor->cell_num < num_cells)
     {
-      return EXECUTE_FAILURE;
+      uint32_t key_at_index = *leaf_node_key (node, cursor->cell_num);
+      if (key_at_index == key)
+	{
+	  free (cursor);
+	  return EXECUTE_DUPLICATE_KEY;
+	}
     }
+
   leaf_node_insert (cursor, source->id, source);
   free (cursor);
 
