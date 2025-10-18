@@ -21,8 +21,12 @@ const uint8_t COMMON_NODE_HEADER_SIZE =
 
 const uint32_t LEAF_NODE_NUM_CELLS_SIZE = sizeof (uint32_t);
 const uint32_t LEAF_NODE_NUM_CELLS_OFFSET = COMMON_NODE_HEADER_SIZE;
+const uint32_t LEAF_NODE_NEXT_LEFT_SIZE = sizeof (uint32_t);
+const uint32_t LEAF_NODE_NEXT_LEAF_OFFSET =
+  LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE;
 const uint32_t LEAF_NODE_HEADER_SIZE =
-  COMMON_NODE_HEADER_SIZE + LEAF_NODE_NUM_CELLS_SIZE;
+  COMMON_NODE_HEADER_SIZE + LEAF_NODE_NUM_CELLS_SIZE +
+  LEAF_NODE_NEXT_LEFT_SIZE;
 
 const uint32_t LEAF_NODE_KEY_SIZE = sizeof (uint32_t);
 const uint32_t LEAF_NODE_KEY_OFFSET = 0;
@@ -163,12 +167,19 @@ leaf_node_value (void *node, uint32_t num)
   return leaf_node_cell (node, num) + LEAF_NODE_KEY_SIZE;
 }
 
+uint32_t *
+leaf_node_next_leaf (void *node)
+{
+  return node + LEAF_NODE_NEXT_LEAF_OFFSET;
+}
+
 void
 initialize_leaf_node (void *node)
 {
   set_node_type (node, NODE_LEAF);
   set_node_root (node, false);
   *leaf_node_num_cells (node) = 0;
+  *leaf_node_next_leaf (node) = 0;
 }
 
 void
@@ -243,13 +254,9 @@ get_page (pager_t * pager, uint32_t page_num)
 cursor_t *
 table_start (table_t * table)
 {
-  cursor_t *cursor = malloc (sizeof (cursor_t));
-  cursor->table = table;
-  cursor->page_num = table->root_page_num;
-  cursor->cell_num = 0;
-
-  void *root_node = get_page (table->pager, table->root_page_num);
-  uint32_t num_cells = *leaf_node_num_cells (root_node);
+  cursor_t *cursor = table_find (table, 0);
+  void *node = get_page (table->pager, cursor->page_num);
+  uint32_t num_cells = *leaf_node_num_cells (node);
   cursor->end_of_table = (num_cells == 0);
 
   return cursor;
@@ -267,8 +274,7 @@ table_find (table_t * table, uint32_t key)
     }
   else
     {
-      printf ("Need to implement internal node\n");
-      exit (EXIT_FAILURE);
+      return internal_node_find (table, root_page_num, key);
     }
 }
 
@@ -294,7 +300,16 @@ cursor_advance (cursor_t * cursor)
   cursor->cell_num++;
   if (cursor->cell_num >= (*leaf_node_num_cells (node)))
     {
-      cursor->end_of_table = true;
+      uint32_t next_page_num = *leaf_node_next_leaf (node);
+      if (next_page_num == 0)
+	{
+	  cursor->end_of_table = true;
+	}
+      else
+	{
+	  cursor->page_num = next_page_num;
+	  cursor->cell_num = 0;
+	}
     }
 }
 
@@ -423,6 +438,8 @@ leaf_node_split_and_insert (cursor_t * cursor, uint32_t key, row_t * value)
   uint32_t new_page_num = get_unused_page_num (cursor->table->pager);
   void *new_node = get_page (cursor->table->pager, new_page_num);
   initialize_leaf_node (new_node);
+  *leaf_node_next_leaf (new_node) = *leaf_node_next_leaf (old_node);
+  *leaf_node_next_leaf (old_node) = new_page_num;
 
   for (int32_t i = LEAF_NODE_MAX_CELLS; i >= 0; i--)
     {
@@ -441,7 +458,10 @@ leaf_node_split_and_insert (cursor_t * cursor, uint32_t key, row_t * value)
 
       if (i == cursor->cell_num)
 	{
-	  serialize_row (value, destination);
+	  serialize_row (value,
+			 leaf_node_value (destination_node,
+					  index_within_node));
+	  *leaf_node_key (destination_node, index_within_node) = key;
 	}
       else if (i > cursor->cell_num)
 	{
@@ -561,5 +581,40 @@ leaf_node_find (table_t * table, uint32_t page_num, uint32_t key)
 
   cursor->cell_num = min_index;
   return cursor;
+
+}
+
+cursor_t *
+internal_node_find (table_t * table, uint32_t page_num, uint32_t key)
+{
+  void *node = get_page (table->pager, page_num);
+  uint32_t num_keys = *internal_node_num_keys (node);
+
+  uint32_t min_index = 0;
+  uint32_t max_index = num_keys;
+
+  while (min_index != max_index)
+    {
+      uint32_t index = (min_index + max_index) / 2;
+      uint32_t key_to_right = *internal_node_key (node, index);
+      if (key_to_right >= key)
+	{
+	  max_index = index;
+	}
+      else
+	{
+	  min_index = index + 1;
+	}
+    }
+
+  uint32_t child_num = *internal_node_child (node, min_index);
+  void *child = get_page (table->pager, child_num);
+  switch (get_node_type (child))
+    {
+    case NODE_LEAF:
+      return leaf_node_find (table, child_num, key);
+    case NODE_INTERNAL:
+      return internal_node_find (table, page_num, key);
+    }
 
 }

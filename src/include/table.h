@@ -49,6 +49,8 @@ extern const uint8_t COMMON_NODE_HEADER_SIZE;
 
 extern const uint32_t LEAF_NODE_NUM_CELLS_SIZE;
 extern const uint32_t LEAF_NODE_NUM_CELLS_OFFSET;
+extern const uint32_t LEAF_NODE_NEXT_LEFT_SIZE;
+extern const uint32_t LEAF_NODE_NEXT_LEFT_OFFSET;
 extern const uint32_t LEAF_NODE_HEADER_SIZE;
 
 extern const uint32_t LEAF_NODE_KEY_SIZE;
@@ -98,6 +100,7 @@ uint32_t * leaf_node_num_cells (void *node);
 void * leaf_node_cell (void *node, uint32_t num);
 uint32_t * leaf_node_key (void *node, uint32_t num);
 void * leaf_node_value (void *node, uint32_t num);
+uint32_t * leaf_node_next_leaf (void *node);
 void initialize_leaf_node (void *node);
 
 void print_row(row_t *row);
@@ -130,5 +133,6 @@ int leaf_node_split_and_insert (cursor_t * cursor, uint32_t key, row_t * value);
 uint32_t get_unused_page_num (pager_t * pager);
 
 int create_new_root (table_t * table, uint32_t right_child_page_num);
+cursor_t * internal_node_find (table_t * table, uint32_t page_num, uint32_t key);
 
 #endif

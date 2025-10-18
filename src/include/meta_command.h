@@ -15,6 +15,7 @@ typedef enum
 
 void print_constants ();
 void print_leaf_node (void *node);
+void print_tree (pager_t * pager, uint32_t page_num, uint32_t indentation_level);
 meta_command_type_t do_meta_command(input_buffer_t *input_buffer, table_t *table);
 
 #endif

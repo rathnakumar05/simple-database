@@ -57,12 +57,13 @@ prepare_statement (input_buffer_t * input_buffer, statement_t * statement)
 execute_type_t
 execute_insert (statement_t * statement, table_t * table)
 {
-  void *node = get_page (table->pager, table->root_page_num);
+  row_t *row = &(statement->row);
+  uint32_t key = row->id;
+  cursor_t *cursor = table_find (table, key);
+
+  void *node = get_page (table->pager, cursor->page_num);
   uint32_t num_cells = *leaf_node_num_cells (node);
 
-  row_t *source = &(statement->row);
-  uint32_t key = source->id;
-  cursor_t *cursor = table_find (table, key);
   if (cursor->cell_num < num_cells)
     {
       uint32_t key_at_index = *leaf_node_key (node, cursor->cell_num);
@@ -73,7 +74,8 @@ execute_insert (statement_t * statement, table_t * table)
 	}
     }
 
-  leaf_node_insert (cursor, source->id, source);
+  leaf_node_insert (cursor, row->id, row);
+
   free (cursor);
 
   return EXECUTE_SUCCESS;
