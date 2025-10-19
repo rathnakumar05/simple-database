@@ -74,6 +74,8 @@ extern const uint32_t INTERNAL_NODE_KEY_SIZE;
 extern const uint32_t INTERNAL_NODE_CHILD_SIZE;
 extern const uint32_t INTERNAL_NODE_CELL_SIZE;
 
+extern const uint32_t INTERNAL_NODE_MAX_CELLS;
+
 typedef struct {
     int file_d;
     uint32_t file_size;
@@ -126,6 +128,9 @@ uint32_t get_node_max_key (void *node);
 bool is_node_root (void *node);
 void set_node_root (void *node, bool is_root);
 uint32_t * internal_node_key (void *node, uint32_t key_num);
+void internal_node_insert (table_t * table, uint32_t parent_page_num, uint32_t child_page_num);
+
+uint32_t * node_parent (void *node);
 
 int leaf_node_insert (cursor_t * cursor, uint32_t key, row_t * value);
 cursor_t * leaf_node_find (table_t * table, uint32_t page_num, uint32_t key);
@@ -133,6 +138,8 @@ int leaf_node_split_and_insert (cursor_t * cursor, uint32_t key, row_t * value);
 uint32_t get_unused_page_num (pager_t * pager);
 
 int create_new_root (table_t * table, uint32_t right_child_page_num);
+uint32_t internal_node_find_child (void *node, uint32_t key);
 cursor_t * internal_node_find (table_t * table, uint32_t page_num, uint32_t key);
+void update_internal_node_key (void *node, uint32_t old_key, uint32_t new_key);
 
 #endif
